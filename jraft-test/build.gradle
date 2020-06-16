@@ -1,0 +1,9 @@
+dependencies {
+    compile project(':jraft-core')
+    compile group: 'com.alipay.sofa', name: 'hessian', version: '3.3.6'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.2'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-jcl', version: '2.2'
+}

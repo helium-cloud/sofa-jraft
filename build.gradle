@@ -1,20 +1,31 @@
 buildscript {
     project.ext {
-        //自动推送镜像
-        autoPush = true
-        //版本号
-        versionTail = new Date().format('yyMMddHHmm')
 
+        if (!project.hasProperty("nexusUser")) {
+            nexusUser = 'helium'
+        }
+        if (!project.hasProperty("nexusPass")) {
+            nexusPass = 'helium.123'
+        }
+        nexusRoot = 'http://urcs.feinno.com:5260/repository'
+        privateRepo = { return { url "${nexusRoot}/maven-public/" } }
+        uploadRepo = { project ->
+            return {
+                url "$nexusRoot/${project.version.endsWith('-SNAPSHOT') ? 'maven-snapshots' : 'maven-releases'}"
+                credentials { username nexusUser; password nexusPass }
+            }
+        }
         repoClosure = {
-            mavenLocal()
-            maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
+
             maven { url "http://urcs.feinno.com:5260/repository/maven-public/"}
-            maven { url "http://repo.spring.io/milestone/" }
+            maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
             maven { url "https://repo.spring.io/snapshot/" }
             maven { url "https://repo1.maven.org/maven2/" }
+            mavenLocal()
             mavenCentral()
 
         }
+        versionTail = new Date().format('yyMMddHHmm')
     }
     repositories repoClosure
 }
@@ -22,16 +33,17 @@ buildscript {
 allprojects { project ->
 
     project.repositories rootProject.repoClosure
-    group = 'com.alipay.sofa'
-    version = "1.0.0-$versionTail"
+
+    group = 'org.helium'
+    version = "1.0.0-release"
 }
 
-// gradle构建对外接口依赖包时,排除下面不需要的Module,只暴露接口
-def mavenPublishIgnoreList = ['im:activationproxy','im:configcenter','']
+def mavenPublishIgnoreList = ['helium-sample']
 
 subprojects { project ->
 
     apply plugin: 'java'
+
     apply plugin: 'maven-publish'
 
     tasks.withType(JavaCompile) {
@@ -44,8 +56,9 @@ subprojects { project ->
     }
 
     dependencies {
-//        testCompile "junit:junit:$junit_version"
+        testCompile "junit:junit:$junit_version"
     }
+
 
     task sourceJar(type: Jar) {
         from sourceSets.main.allJava
@@ -54,7 +67,9 @@ subprojects { project ->
 
     if (!(project.name in mavenPublishIgnoreList)) {
         publishing {
-
+            repositories {
+                maven uploadRepo(project)
+            }
             publications {
                 maven(MavenPublication) {
                     from components.java
@@ -64,4 +79,3 @@ subprojects { project ->
         }
     }
 }
-
